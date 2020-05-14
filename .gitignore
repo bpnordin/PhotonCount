@@ -4,3 +4,4 @@ Pipfile.lock
 test.py
 main.py
 photonCounting
+.vscode/settings.json
