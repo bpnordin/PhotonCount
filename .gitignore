@@ -1,0 +1,6 @@
+venv
+*.png
+Pipfile.lock
+test.py
+main.py
+photonCounting
