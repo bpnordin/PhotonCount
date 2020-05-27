@@ -62,7 +62,7 @@ def singleAtom(recordTime,rate,lifeTime,photonArray):
     return prob
 
 
-def getHistogram(probDistBack,probDistSingle,photonArray,dataPoints = 5000,samples = [], weights = [.5,.5]):
+def getHistogram(probDistBack,probDistSingle,photonArray,dataPoints = 5000,samples = None, weights = [.5,.5]):
     """
     Calcuates an array of counts given the background and atom distributions
     
@@ -72,12 +72,12 @@ def getHistogram(probDistBack,probDistSingle,photonArray,dataPoints = 5000,sampl
             the background probability distribution
         probDistSingle : array_like 
             the single atom probability distribution
-    kwargs:
-        dataPoints: 
+        dataPoints: int
             the amount of times to run the experiemnt
-        samples: 
+        samples: array_like
             an array of length boolean values that represent if that atom is trapped or not
-        weights: 
+            this will autogenerate if left blank
+        weights: length 2 array
             the loading proability for 0,1 atoms
     Returns:
         an array of values that are ready for a histogram
@@ -86,7 +86,7 @@ def getHistogram(probDistBack,probDistSingle,photonArray,dataPoints = 5000,sampl
     hist = [] 
     population = [False,True] #false is no atom, true is single atome
     #check to see if we are supplied with any samples, if not generate with dataPoiints
-    if len(samples) == 0:   
+    if samples is None:
         samples = rand.choices(population,weights,k = dataPoints)
 
     for i in samples:
@@ -100,32 +100,50 @@ def getHistogram(probDistBack,probDistSingle,photonArray,dataPoints = 5000,sampl
 
 #the function for scipy curve fit as the addition of two gaussian curves
 def gaussian2(x, amp1,cen1,sigma1,amp2,cen2,sigma2):
-    """ 
+    """
+    the addition of two gaussians
+    Paramaters
+    --------- 
     a function of the addition of two gaussians
     Args:
-        x: position to evaluate the function at
-        amp1: the amplitude of the first gaussian function
-        cen1: the center of the first gaussian function
-        sigma1: the standard deviation of the first gaussian function
-        amp2: the amplitude of the second gaussian function
-        cen2: the center of the second gaussian function
-        sigma2: the standard deviation of the second gaussian function
-    Returns:
-        the value of the double gaussian at position x
+        x : int
+            position to evaluate the function at
+        amp1 : int
+            the amplitude of the first gaussian function
+        cen1 : int
+            the center of the first gaussian function
+        sigma1 : int
+            the standard deviation of the first gaussian function
+        amp2 : int
+            the amplitude of the first gaussian function
+        cen2 : int
+            the center of the first gaussian function
+        sigma2 : int
+            the standard deviation of the first gaussian function
+    Returns
+    --------
+    the value of the double gaussian at position x
 
     """
     return amp1*(1/(sigma1*(np.sqrt(2*np.pi))))*(np.exp((-1.0/2.0)*(((x-cen1)/sigma1)**2))) + \
             amp2*(1/(sigma2*(np.sqrt(2*np.pi))))*(np.exp((-1.0/2.0)*(((x-cen2)/sigma2)**2)))
 def gaussian1(x, amp1,cen1,sigma1):
     """ 
-    a function of the addition of one gaussians
+    the addition of two gaussians
+    Paramaters
+    --------- 
+    a function of a single gaussian
     Args:
-        x: position to evaluate the function at
-        amp1: the amplitude of the first gaussian function
-        cen1: the center of the first gaussian function
-        sigma1: the standard deviation of the first gaussian function
-       
-    Returns:
+        x : int
+            position to evaluate the function at
+        amp1 : int
+            the amplitude of the gaussian function
+        cen1 : int
+            the center of the gaussian function
+        sigma1 : int
+            the standard deviation of the gaussian function
+    Returns
+    --------
         the value of the single gaussian at position x
 
     """
