@@ -7,6 +7,15 @@ from scipy.optimize import curve_fit
 from tqdm import tqdm  
 
 def convolve(dist1,dist2):
+    """
+    convolves two probability distributions of the same size 
+    Paramaters
+    ----------
+    dist1 : array_like
+        an array to be convolved with the other array in the argument
+    dist2 : array_like
+        an array to be convolved with the other array in the argument
+    """
     new = np.zeros_like(dist1)
     
     for n in range(len(new)):
@@ -17,21 +26,29 @@ def convolve(dist1,dist2):
 
     return new
 
-def singleAtom(recordTime,rate,lifeTime,xx):
+def singleAtom(recordTime,rate,lifeTime,photonArray):
     """
-    analytically evaluates the probability distribution of photon counts n (xx[n]) for a single atom in a dipole trap
-    Args:
-        recordTime: the time that the measurment beams are active(seconds).
-        rate: the rate that the single atom emits photons(photons/second)
-        lifeTime: the lifetime of the trap(seconds)
-        xx: an array of integers that are the possible photon counts to measure
-    Returns:
-        an array of probabilities to measure the photon count given the paramaters.
+    Analytically evaluates the probability distribution of photon counts n (photonArray[n]) for a single atom in a dipole trap
 
+    Paramaters
+    ----------
+    recordTime : int 
+        the time that the measurment beams are active(seconds).
+    rate : int 
+        the rate that the single atom emits photons(photons/second)
+    lifeTime : int 
+        the lifetime of the trap(seconds)
+    photonArray : array_like
+        an array of integers that are the possible photon counts to measure
+
+    Returns
+    -------
+        an array of probabilities to measure the photon count given the paramaters.
     """ 
+
     prob = [] 
-    #go through all of the photon counts in xx
-    for i in tqdm(xx):
+    #go through all of the photon counts in photonArray
+    for i in tqdm(photonArray):
         #take the integral of the lifetime and the poisson dist 
         val = integrate.quad(
             lambda t,r,n,tau:np.exp(-t/tau)/tau*poisson.pmf(n,r*t),
@@ -47,13 +64,21 @@ def singleAtom(recordTime,rate,lifeTime,xx):
 
 def getHistogram(probDistBack,probDistSingle,photonArray,dataPoints = 5000,samples = [], weights = [.5,.5]):
     """
-    calcuates an array of counts given the background and atom distributions
-    Args:
-        probDistBack: the background probability distribution
-        probDistSingle: the single atom probability distribution
-        dataPoints: the amount of times to run the experiemnt
-        samples: an array of length boolean values that represent if that atom is trapped or not
-        weights: the loading proability for 0,1 atoms
+    Calcuates an array of counts given the background and atom distributions
+    
+    Paramaters
+    ----------
+        probDistBack : array_like 
+            the background probability distribution
+        probDistSingle : array_like 
+            the single atom probability distribution
+    kwargs:
+        dataPoints: 
+            the amount of times to run the experiemnt
+        samples: 
+            an array of length boolean values that represent if that atom is trapped or not
+        weights: 
+            the loading proability for 0,1 atoms
     Returns:
         an array of values that are ready for a histogram
 
@@ -106,18 +131,29 @@ def gaussian1(x, amp1,cen1,sigma1):
     """
     return amp1*(1/(sigma1*(np.sqrt(2*np.pi))))*(np.exp((-1.0/2.0)*(((x-cen1)/sigma1)**2)))
             
-def graph(histogram,photonArray, p0 = [],binNumber = 50, colors = ["gray", "red"],fit = True,double = True):
+def graph(histogram,photonArray, p0 = None,binNumber = 50, colors = ["gray", "red"],fit = True,double = True):
     """ 
-    Args:
-        histogram: the dist of data to put in the histogram
-    Kwargs:  
-        p0: a list of the initial guesses of for the scipy curve fit function on two gaussian functions 
-            [amplitude1,center1,sigma1,amplitude2,center2,sigma2]     
-        binNumnber: the number of bins in the histogram
-        colors: a list of the colors for the histogram chart and fit line
-        fit: a boolean that when true graphs a fit from the p0 values
-        Double: a boolean that when true fits a double gaussian to the data
-    Returns:
+    Graphs a histogram and fit of the histogram
+
+    Paramaters
+    -----------
+    histogram : array_like
+        the dist of data to put in the histogram
+    p0 : array_like, optional
+        Initial guess for the parameters (length N).  If None, then the
+        initial values will all be 1 (if the number of parameters for the
+        function can be determined using introspection, otherwise a
+        ValueError is raised).
+    binNumnber : int 
+        the number of bins in the histogram
+    colors : array_like
+        a list of the colors for the histogram chart and fit line
+    fit : boolean
+        when true graphs a fit from the p0 values
+    Double : boolean
+        when true fits a double gaussian to the data
+
+    Returns : array
         returns the y values of the fit for the given range of the histogram data, if no fit is given then an 
         empty array is returned
     """
@@ -125,6 +161,7 @@ def graph(histogram,photonArray, p0 = [],binNumber = 50, colors = ["gray", "red"
     bin_heights, bin_borders, _ = plt.hist(histogram,binNumber,color = colors[0])
 
     if fit:
+        
         bin_centers = bin_borders[:-1] + np.diff(bin_borders) / 2
         #fit with guess p0
        
