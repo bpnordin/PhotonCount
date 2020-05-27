@@ -5,3 +5,4 @@ main.py
 photonCounting
 .vscode/settings.json
 .ipynb_checkpoints
+__pycache__/functions.cpython-38.pyc
