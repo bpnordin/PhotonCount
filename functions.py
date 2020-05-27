@@ -148,8 +148,12 @@ def gaussian1(x, amp1,cen1,sigma1):
 
     """
     return amp1*(1/(sigma1*(np.sqrt(2*np.pi))))*(np.exp((-1.0/2.0)*(((x-cen1)/sigma1)**2)))
-            
-def graph(histogram,photonArray, p0 = None,binNumber = 50, colors = ["gray", "red"],fit = True,double = True):
+def gaussianDecay(x,amp1,cen1,sigma1,decay,decayAmp,center):
+
+    return amp1*(1/(sigma1*(np.sqrt(2*np.pi))))*(np.exp((-1.0/2.0)*(((x-cen1)/sigma1)**2)))+decayAmp*np.exp(-decay*(x-center))
+
+
+def graph(histogram,photonArray, p0 = None,binNumber = 50, colors = ["gray", "red"],fit = True,double = True,decay = False):
     """ 
     Graphs a histogram and fit of the histogram
 
@@ -190,9 +194,16 @@ def graph(histogram,photonArray, p0 = None,binNumber = 50, colors = ["gray", "re
                 label=r"$\mu_1$ = %.2f std = %.2f $\mu_1$ = %.2f std = %.2f"%(
                     popt[1],popt[2],popt[4],popt[5]),color = colors[1]
                     )
+        elif decay:
+            #need to fit to a lot of zeros as well
+            popt, pcov = curve_fit(gaussianDecay, bin_centers, bin_heights, p0,bounds = ([-np.inf,-np.inf,-np.inf,0,0,-np.inf],np.inf))
+            plt.plot(x_interval_for_fit, gaussianDecay(x_interval_for_fit, *popt), label=r"$\mu_1$ = %.2f and std = %.2f "%(popt[1],popt[2])+
+                "\n"+r"and decay %f and decay amp %.2f and center %.2f"%(popt[3],popt[4],popt[5]),
+                    color = colors[1])
         else:
             popt, pcov = curve_fit(gaussian1, bin_centers, bin_heights, p0)
-            plt.plot(x_interval_for_fit, gaussian1(x_interval_for_fit, *popt), label=r"$\mu_1$ = %.2f and std = %.2f"%(popt[1],popt[2]),color = colors[1])
+            plt.plot(x_interval_for_fit, gaussian1(x_interval_for_fit, *popt), label=r"$\mu_1$ = %.2f and std = %.2f"%(popt[1],popt[2]),
+                    color = colors[1])
         plt.legend()    
     
     plt.xlabel("Photon Counts")
@@ -201,6 +212,8 @@ def graph(histogram,photonArray, p0 = None,binNumber = 50, colors = ["gray", "re
     if not fit:
         return []
     if not double:
+        if decay:
+            return gaussianDecay(photonArray,*popt)
         return gaussian1(photonArray,*popt)
     else:
         return gaussian2(photonArray,*popt)
