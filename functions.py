@@ -148,10 +148,22 @@ def gaussian1(x, amp1,cen1,sigma1):
 
     """
     return amp1*(1/(sigma1*(np.sqrt(2*np.pi))))*(np.exp((-1.0/2.0)*(((x-cen1)/sigma1)**2)))
+
 def gaussianDecay(x,amp1,cen1,sigma1,decay,decayAmp,center):
 
     return amp1*(1/(sigma1*(np.sqrt(2*np.pi))))*(np.exp((-1.0/2.0)*(((x-cen1)/sigma1)**2)))+decayAmp*np.exp(-decay*(x-center))
 
+def gaussianDecayPlot(xx,amp1,cen1,sigma1,decay,decayAmp,center):
+    #dont have the decay after the gaussian
+    epsilon = 1
+    return_array = np.zeros_like(xx,dtype=float)
+    for i,x in enumerate(xx):
+        if x > (cen1+sigma1*epsilon):
+            return_array[i] =  amp1*(1/(sigma1*(np.sqrt(2*np.pi))))*(np.exp((-1.0/2.0)*(((x-cen1)/sigma1)**2)))
+        else:
+
+            return_array[i] =  amp1*(1/(sigma1*(np.sqrt(2*np.pi))))*(np.exp((-1.0/2.0)*(((x-cen1)/sigma1)**2)))+decayAmp*np.exp(-decay*(x-center))
+    return return_array
 
 def graph(histogram,photonArray, p0 = None,binNumber = 50, colors = ["gray", "red"],fit = True,double = True,decay = False):
     """ 
@@ -205,7 +217,7 @@ def graph(histogram,photonArray, p0 = None,binNumber = 50, colors = ["gray", "re
             plt.plot(x_interval_for_fit, gaussian1(x_interval_for_fit, *popt), label=r"$\mu_1$ = %.2f and std = %.2f"%(popt[1],popt[2]),
                     color = colors[1])
         plt.legend()    
-    
+    #plt.xlim((650,670)) 
     plt.xlabel("Photon Counts")
     plt.ylabel("Frequency of Counts")
     plt.show()
@@ -213,7 +225,7 @@ def graph(histogram,photonArray, p0 = None,binNumber = 50, colors = ["gray", "re
         return []
     if not double:
         if decay:
-            return gaussianDecay(photonArray,*popt)
+            return gaussianDecayPlot(photonArray,*popt)
         return gaussian1(photonArray,*popt)
     else:
         return gaussian2(photonArray,*popt)
