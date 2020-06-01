@@ -193,10 +193,9 @@ def graph(histogram,photonArray, p0 = None,binNumber = 50, colors = ["gray", "re
     """
     #the histogram and the bin heights and centers that will be used for fitting
     bin_heights, bin_borders, _ = plt.hist(histogram,binNumber,color = colors[0])
-
+    bin_centers = bin_borders[:-1] + np.diff(bin_borders) / 2
     if fit:
         
-        bin_centers = bin_borders[:-1] + np.diff(bin_borders) / 2
         #fit with guess p0
        
         x_interval_for_fit = np.linspace(bin_borders[0], bin_borders[-1], 10000)
@@ -221,11 +220,4 @@ def graph(histogram,photonArray, p0 = None,binNumber = 50, colors = ["gray", "re
     plt.xlabel("Photon Counts")
     plt.ylabel("Frequency of Counts")
     plt.show()
-    if not fit:
-        return []
-    if not double:
-        if decay:
-            return gaussianDecayPlot(photonArray,*popt)
-        return gaussian1(photonArray,*popt)
-    else:
-        return gaussian2(photonArray,*popt)
+    return bin_borders,bin_heights
