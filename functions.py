@@ -62,7 +62,7 @@ def singleAtom(recordTime,rate,lifeTime,photonArray):
     return prob
 
 
-def getHistogram(probDistBack,probDistSingle,photonArray,dataPoints = 5000,samples = None, weights = [.5,.5]):
+def runExperiment(probDistBack,probDistSingle,photonArray,dataPoints = 5000,samples = None, weights = [.5,.5]):
     """
     Calcuates an array of counts given the background and atom distributions
     
@@ -83,19 +83,15 @@ def getHistogram(probDistBack,probDistSingle,photonArray,dataPoints = 5000,sampl
         an array of values that are ready for a histogram
 
     """ 
-    hist = [] 
     population = [False,True] #false is no atom, true is single atome
     #check to see if we are supplied with any samples, if not generate with dataPoiints
     if samples is None:
         samples = rand.choices(population,weights,k = dataPoints)
+    background = rand.choices(photonArray,probDistBack,k = dataPoints)
+    singleAtom = rand.choices(photonArray,probDistSingle,k=dataPoints)
 
-    for i in samples:
-        if not i:
-            #do background rate
-            hist.append(rand.choices(photonArray,probDistBack)[0])
-        else:
-            #do single atom rate
-            hist.append(rand.choices(photonArray,probDistSingle)[0])
+    hist = [background[i] if not loaded else singleAtom[i] for i,loaded in enumerate(samples)]
+
     return hist
 
 #the function for scipy curve fit as the addition of two gaussian curves
@@ -127,9 +123,10 @@ def gaussian2(x, amp1,cen1,sigma1,amp2,cen2,sigma2):
     """
     return amp1*(1/(sigma1*(np.sqrt(2*np.pi))))*(np.exp((-1.0/2.0)*(((x-cen1)/sigma1)**2))) + \
             amp2*(1/(sigma2*(np.sqrt(2*np.pi))))*(np.exp((-1.0/2.0)*(((x-cen2)/sigma2)**2)))
+
 def gaussian1(x, amp1,cen1,sigma1):
     """ 
-    the addition of two gaussians
+    One single gauusian
     Paramaters
     --------- 
     a function of a single gaussian
@@ -149,23 +146,9 @@ def gaussian1(x, amp1,cen1,sigma1):
     """
     return amp1*(1/(sigma1*(np.sqrt(2*np.pi))))*(np.exp((-1.0/2.0)*(((x-cen1)/sigma1)**2)))
 
-def gaussianDecay(x,amp1,cen1,sigma1,decay,decayAmp,center):
 
-    return amp1*(1/(sigma1*(np.sqrt(2*np.pi))))*(np.exp((-1.0/2.0)*(((x-cen1)/sigma1)**2)))+decayAmp*np.exp(-decay*(x-center))
 
-def gaussianDecayPlot(xx,amp1,cen1,sigma1,decay,decayAmp,center):
-    #dont have the decay after the gaussian
-    epsilon = 1
-    return_array = np.zeros_like(xx,dtype=float)
-    for i,x in enumerate(xx):
-        if x > (cen1+sigma1*epsilon):
-            return_array[i] =  amp1*(1/(sigma1*(np.sqrt(2*np.pi))))*(np.exp((-1.0/2.0)*(((x-cen1)/sigma1)**2)))
-        else:
-
-            return_array[i] =  amp1*(1/(sigma1*(np.sqrt(2*np.pi))))*(np.exp((-1.0/2.0)*(((x-cen1)/sigma1)**2)))+decayAmp*np.exp(-decay*(x-center))
-    return return_array
-
-def graph(histogram,photonArray, p0 = None,binNumber = 50, colors = ["gray", "red"],fit = True,double = True,decay = False):
+def graphHistogram(histogram,photonArray, p0 = None,binNumber = 50, colors = ["gray", "red"],fit = False):
     """ 
     Graphs a histogram and fit of the histogram
 
@@ -183,9 +166,8 @@ def graph(histogram,photonArray, p0 = None,binNumber = 50, colors = ["gray", "re
     colors : array_like
         a list of the colors for the histogram chart and fit line
     fit : boolean
-        when true graphs a fit from the p0 values
-    Double : boolean
-        when true fits a double gaussian to the data
+        when true graphs a double gaussian fit from the p0 values 
+
 
     Returns : array
         returns the y values of the fit for the given range of the histogram data, if no fit is given then an 
@@ -196,28 +178,19 @@ def graph(histogram,photonArray, p0 = None,binNumber = 50, colors = ["gray", "re
     bin_centers = bin_borders[:-1] + np.diff(bin_borders) / 2
     if fit:
         
-        #fit with guess p0
-       
         x_interval_for_fit = np.linspace(bin_borders[0], bin_borders[-1], 10000)
-        if double:
-            popt, pcov = curve_fit(gaussian2, bin_centers, bin_heights, p0)
-            plt.plot(x_interval_for_fit, gaussian2(x_interval_for_fit, *popt), 
-                label=r"$\mu_1$ = %.2f std = %.2f $\mu_1$ = %.2f std = %.2f"%(
-                    popt[1],popt[2],popt[4],popt[5]),color = colors[1]
-                    )
-        elif decay:
-            #need to fit to a lot of zeros as well
-            popt, pcov = curve_fit(gaussianDecay, bin_centers, bin_heights, p0,bounds = ([-np.inf,-np.inf,-np.inf,0,0,-np.inf],np.inf))
-            plt.plot(x_interval_for_fit, gaussianDecay(x_interval_for_fit, *popt), label=r"$\mu_1$ = %.2f and std = %.2f "%(popt[1],popt[2])+
-                "\n"+r"and decay %f and decay amp %.2f and center %.2f"%(popt[3],popt[4],popt[5]),
-                    color = colors[1])
-        else:
-            popt, pcov = curve_fit(gaussian1, bin_centers, bin_heights, p0)
-            plt.plot(x_interval_for_fit, gaussian1(x_interval_for_fit, *popt), label=r"$\mu_1$ = %.2f and std = %.2f"%(popt[1],popt[2]),
-                    color = colors[1])
+
+        #fit with guess p0
+        popt, pcov = curve_fit(gaussian2, bin_centers, bin_heights, p0)
+
+        plt.plot(x_interval_for_fit, gaussian2(x_interval_for_fit, *popt), 
+            label=r"$\mu_1$ = %.2f std = %.2f $\mu_1$ = %.2f std = %.2f"%(
+                popt[1],popt[2],popt[4],popt[5]),color = colors[1]
+                )
         plt.legend()    
-    #plt.xlim((650,670)) 
+
     plt.xlabel("Photon Counts")
     plt.ylabel("Frequency of Counts")
     plt.show()
+    #return what the histogram returns
     return bin_borders,bin_heights
