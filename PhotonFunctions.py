@@ -6,6 +6,16 @@ from scipy.stats import poisson
 from scipy.optimize import curve_fit
 from tqdm import tqdm  
 
+def getProbabilities(binBorders,binHeights,photonCount):
+    
+    #make integers(photons are integers)
+    binBorders = np.round(binBorders).astype(int)
+    probs = np.zeros_like(np.arange(photonCount),dtype=float)
+
+    for i,h in enumerate(binHeights):
+        probs[binBorders[i]:binBorders[i+1]] = h
+    return probs
+
 def convolve(dist1,dist2):
     """
     convolves two probability distributions of the same size 
@@ -148,7 +158,7 @@ def gaussian1(x, amp1,cen1,sigma1):
 
 
 
-def graphHistogram(histogram,photonArray, p0 = None,binNumber = 50, colors = ["gray", "red"],fit = False):
+def graphHistogram(histogram,photonArray, p0 = None,binNumber = 100, colors = ["gray", "red"],fit = False):
     """ 
     Graphs a histogram and fit of the histogram
 
